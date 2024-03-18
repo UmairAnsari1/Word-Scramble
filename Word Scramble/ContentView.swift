@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var errorTitle = ""
     @State private var errorMessage = ""
     @State private var showingError = false
+    @State private var playerScore = 0
     
     var body: some View {
         NavigationStack{
@@ -31,6 +32,11 @@ struct ContentView: View {
                         }
                     }
                 }
+                Text("Score : \(playerScore)")
+                    .font(.title.bold())
+                    .foregroundStyle(.green)
+                    .frame(width: 350,height: 10)
+                    
             }
             .navigationTitle(rootWord)
             .onSubmit(addNewWord)
@@ -40,12 +46,26 @@ struct ContentView: View {
             }message: {
                 Text(errorMessage)
             }
+            .toolbar{
+                Button("New Game", action: startGame)
+            }
         }
     }
     
     func addNewWord(){
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard answer.count > 0 else {return}
+        
+        guard answer.count >= 3 else {
+            wordError(title: "Word too short.",
+                      message: "Please enter words that are at least 3 characters long!")
+            return
+        }
+        
+        guard answer != rootWord else {
+                    wordError(title: "That's our starting word.",
+                              message: "That would be too easy, don't you think?")
+                    return
+                }
         
         guard isOriginal(word: answer) else {
             wordError(title: "Word used already", message: "Be more Original")
@@ -66,6 +86,7 @@ struct ContentView: View {
             useWords.insert(answer, at: 0)
         }
         newWord = ""
+        calculateScore()
     }
     
     func startGame(){
@@ -73,6 +94,7 @@ struct ContentView: View {
             if let startWords = try? String(contentsOf: startWordsURL){
                 let allWords = startWords.components(separatedBy: "\n")
                 rootWord = allWords.randomElement() ?? "silkworm"
+                useWords = [String]()
                 return
             }
         }
@@ -109,6 +131,10 @@ struct ContentView: View {
         errorMessage = message
         showingError = true
     }
+    
+    func calculateScore() {
+        playerScore+=(newWord.count + 1)
+        }
 }
 
 #Preview {
